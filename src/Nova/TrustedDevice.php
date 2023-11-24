@@ -47,7 +47,7 @@ class TrustedDevice extends Resource
             Text::make('User Agent')->required(),
             Number::make('Attempts'),
             DateTime::make('Notified At'),
-            DateTime::make('Verified At', 'verified')
+            DateTime::make('Verified At')
         ];
     }
 
