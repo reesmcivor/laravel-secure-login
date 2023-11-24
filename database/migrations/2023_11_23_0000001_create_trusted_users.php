@@ -14,7 +14,9 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->string('ip_address');
             $table->string('user_agent');
-            $table->boolean('is_verified')->default(false);
+            $table->smallInteger('attempts')->default(0);
+            $table->dateTime('verified_at')->nullable();
+            $table->dateTime('notified_at')->nullable();
             $table->timestamps();
         });
     }

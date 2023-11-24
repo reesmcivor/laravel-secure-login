@@ -18,6 +18,7 @@ use Laravel\Nova\Fields\Markdown;
 use Laravel\Nova\Fields\MorphTo;
 use Laravel\Nova\Fields\MorphToMany;
 use Laravel\Nova\Fields\MultiSelect;
+use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Slug;
 use Laravel\Nova\Fields\Text;
@@ -44,13 +45,9 @@ class TrustedDevice extends Resource
             ID::make()->sortable(),
             Text::make('IP Address')->required(),
             Text::make('User Agent')->required(),
-            Boolean::make('Is Verified', 'is_verified')
-                ->displayUsing(function ($value) {
-                    return $value ? 'Yes' : 'No';
-                })
-                ->resolveUsing(function ($value) {
-                    return $value ? true : false;
-                }),
+            Number::make('Attempts'),
+            DateTime::make('Notified At'),
+            DateTime::make('Verified At', 'verified')
         ];
     }
 
