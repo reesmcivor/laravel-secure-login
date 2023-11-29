@@ -30,13 +30,13 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use ReesMcIvor\Labels\Nova\Labels;
 use Whitecube\NovaFlexibleContent\Flexible;
 
-class TrustedDevice extends Resource
+class TrustedIp extends Resource
 {
 
-    public static $model = \ReesMcIvor\SecureLogin\Models\TrustedDevice::class;
+    public static $model = \ReesMcIvor\SecureLogin\Models\TrustedIp::class;
     public static $title = 'ip_address';
     public static $search = [
-        'user_agent', 'ip_address'
+        'ip_address'
     ];
 
     public function fields(NovaRequest $request)
@@ -44,7 +44,6 @@ class TrustedDevice extends Resource
         return [
             ID::make()->sortable(),
             Text::make('IP Address')->required(),
-            Text::make('User Agent')->required(),
             Number::make('Attempts'),
             DateTime::make('Verified At'),
             DateTime::make('Notified At'),

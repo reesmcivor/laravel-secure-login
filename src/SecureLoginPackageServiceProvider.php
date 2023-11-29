@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Nova\Nova;
 use ReesMcIvor\SecureLogin\Nova\TrustedDevice;
+use ReesMcIvor\SecureLogin\Nova\TrustedIp;
 
 class SecureLoginPackageServiceProvider extends ServiceProvider
 {
@@ -24,9 +25,11 @@ class SecureLoginPackageServiceProvider extends ServiceProvider
         }
 
         $this->loadRoutesFrom(__DIR__.'/routes/web.php');
+        $this->loadViewsFrom(__DIR__.'/resources/views', 'secure-login');
 
         Nova::resources([
-            TrustedDevice::class
+            TrustedDevice::class,
+            TrustedIp::class
         ]);
 
         $router = $this->app['router'];

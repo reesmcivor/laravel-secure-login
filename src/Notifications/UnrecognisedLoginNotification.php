@@ -15,22 +15,27 @@ class UnrecognisedLoginNotification extends Notification
 {
     use Queueable;
 
-    protected string $trustLink;
+    protected string $trustIpUrl;
+    protected string $trustIpWithUserAgentUrl;
 
     public function __construct(
         protected TrustedDevice $trustedDevice
     )
     {
-        $this->trustLink = $this->createTrustLink();
+        $this->trustIpUrl = $this->getTrustUrl(true);
+        $this->trustIpWithUserAgentUrl = $this->getTrustUrl(false);
     }
 
-    protected function createTrustLink() : string
+    protected function getTrustUrl( $whitelistIp = false ) : string
     {
         $trustedDevice = $this->trustedDevice;
         return URL::temporarySignedRoute(
             "secure-login.approve",
             now()->addHour(),
-            ['trustedDevice' => $trustedDevice]
+            [
+                'trustedDevice' => $trustedDevice,
+                'whitelistIp' => $whitelistIp ? 1 : 0
+            ]
         );
     }
 
@@ -50,9 +55,11 @@ class UnrecognisedLoginNotification extends Notification
             ->subject($this->getTitle())
             ->bcc(['Rees McIvor' => 'hello@logicrises.co.uk' ])
             ->line("There has been a Unrecognised Login Attempt.")
+            ->line(sprintf("User: %s", $this->trustedDevice?->user?->email))
             ->line(sprintf("IP Address: %s", $this->trustedDevice->ip_address))
             ->line(sprintf("User Agent: %s", $this->trustedDevice->user_agent))
-            ->action('Approve', $this->trustLink);
+            ->action('Whitelist IP ', $this->trustIpUrl)
+            ->action('Approve User Agent + IP', $this->trustIpWithUserAgentUrl);
     }
 
     public function toSlack($notifiable)
@@ -61,11 +68,13 @@ class UnrecognisedLoginNotification extends Notification
             ->content($this->getTitle())
             ->info()
             ->attachment(function ($attachment) {
-                $attachment->title($this->trustedDevice?->user?->email, $this->trustLink)
+                $attachment->title($this->trustedDevice?->user?->email, $this->trustIpWithUserAgentUrl)
                     ->fields([
                         'IP' => $this->trustedDevice->ip_address,
+                        'User' => $this->trustedDevice?->user?->email,
                         'User Agent' => $this->trustedDevice->user_agent,
-                        'Approve' => $this->trustLink,
+                        'Whitelist IP' => $this->trustIpUrl,
+                        'Approve User Agent + IP' => $this->trustIpWithUserAgentUrl,
                     ]);
             });
     }
