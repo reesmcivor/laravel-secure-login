@@ -20,6 +20,7 @@ class UnrecognisedLoginCheckMiddleware
     {
         if (!$this->isRecognised($request))
         {
+
             $trustedDevice = $this->getTrustedDevice($request);
             $trustedIpAddress = $this->getTrustedIp($request);
             
@@ -43,6 +44,10 @@ class UnrecognisedLoginCheckMiddleware
         $userId = Auth::id();
         $ipAddress = $request->ip();
         $userAgent = $request->header('User-Agent');
+        
+        if (in_array($request->ip(), $this->getWhiteListedIps())) {
+            return true;
+        }
 
         return TrustedDevice::where('user_id', $userId)
             ->where('ip_address', $ipAddress)
@@ -84,5 +89,10 @@ class UnrecognisedLoginCheckMiddleware
         $trustedIp->attempts = $trustedIp->attempts + 1;
         $trustedIp->save();
         return $trustedIp;
+    }
+
+    protected function getWhiteListedIps() : array
+    {
+        return TrustedIp::whereNotNull('verified_at')->pluck('ip_address')->toArray();
     }
 }
