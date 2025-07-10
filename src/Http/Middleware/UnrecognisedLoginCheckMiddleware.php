@@ -23,8 +23,9 @@ class UnrecognisedLoginCheckMiddleware
 
             $trustedDevice = $this->getTrustedDevice($request);
             $trustedIpAddress = $this->getTrustedIp($request);
-            
-            if(!$trustedDevice->notified_at || $trustedDevice->notified_at->addMinutes(30)->isPast()) {
+
+            $isPast30Mins = \Carbon\Carbon::parse($trustedDevice?->notified_at)?->addMinutes(30)?->isPast() ?? false;
+            if(!$trustedDevice->notified_at || $isPast30Mins) {
                 $notificationUsers = User::whereIn('email', config('secure-login.notification_emails'))->get();
                 $notificationUsers->each(fn($user) => $user->notify(new UnrecognisedLoginNotification($trustedDevice)));
                 $trustedDevice->notified_at = now();
@@ -44,16 +45,16 @@ class UnrecognisedLoginCheckMiddleware
         $userId = Auth::id();
         $ipAddress = $request->ip();
         $userAgent = $request->header('User-Agent');
-        
+
         if (in_array($request->ip(), $this->getWhiteListedIps())) {
             return true;
         }
 
         return TrustedDevice::where('user_id', $userId)
-            ->where('ip_address', $ipAddress)
-            ->where('user_agent', $userAgent)
-            ->whereNotNull('verified_at')
-            ->exists() || TrustedIp::where('ip_address', $ipAddress)->whereNotNull('verified_at')->exists();
+                ->where('ip_address', $ipAddress)
+                ->where('user_agent', $userAgent)
+                ->whereNotNull('verified_at')
+                ->exists() || TrustedIp::where('ip_address', $ipAddress)->whereNotNull('verified_at')->exists();
     }
 
     /**
@@ -63,17 +64,17 @@ class UnrecognisedLoginCheckMiddleware
     protected function getTrustedDevice($request) : TrustedDevice
     {
         $trustedDevice = TrustedDevice::firstOrCreate([
+            'user_id' => auth()->id(),
             'ip_address' => $request->ip(),
-            'user_agent' => $request->header('User-Agent')
-        ], [
-            'user_id' => Auth::id() ?? null,
+            'user_agent' => $request->header('User-Agent'),
         ]);
 
-        $trustedDevice->attempts = $trustedDevice->attempts + 1;
+        $trustedDevice->attempts++;
         $trustedDevice->save();
+
         return $trustedDevice;
     }
-    
+
     /**
      * @param $request
      * @return TrsutedIp
@@ -83,7 +84,7 @@ class UnrecognisedLoginCheckMiddleware
         $trustedIp = TrustedIp::firstOrCreate([
             'ip_address' => $request->ip(),
         ], [
-            'user_id' => Auth::id() ?? null,
+            'user_id' => auth()->id() ?? null,
         ]);
 
         $trustedIp->attempts = $trustedIp->attempts + 1;

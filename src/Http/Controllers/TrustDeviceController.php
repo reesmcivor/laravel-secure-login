@@ -21,6 +21,7 @@ class TrustDeviceController extends Controller
             $trustedIp->save();
         }
 
+        return redirect()->route('dashboard')->with('success', 'Device trusted successfully.');
         return response()->json([sprintf("Verified IP vs User Agent %s %s", $trustedDevice->ip_address, $whitelistIp ? "Whitelisted IP" : "Whitelist IP + User Agent" )] );
     }
 

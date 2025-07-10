@@ -14,6 +14,10 @@ class TrustedDevice extends Model
 
     protected $dates = ['verified_at', 'notified_at'];
 
+    protected $casts = [
+        'notified_at' => 'datetime',
+        'verified_at' => 'datetime',
+    ];
     public function user()
     {
         return $this->belongsTo(User::class);
